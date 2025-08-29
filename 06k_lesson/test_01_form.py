@@ -1,73 +1,66 @@
-# PR placeholder: ничего не меняем, просто для отображения изменений
+import threading
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
 
 
 @pytest.mark.edge
-def test_form_validation_edge():
-    # Создаем экземпляр Edge
-    driver = webdriver.Edge()  # msedgedriver должен быть в PATH
+def test_form_highlight_edge():
+    driver = webdriver.Edge()  # Убедитесь, что msedgedriver в PATH
+    wait = WebDriverWait(driver, 10)
 
     try:
-        # Открываем страницу
-        driver.get(
-            "https://bonigarcia.dev/selenium-webdriver-java/data-types.html"
+        (driver.get
+         ("https://bonigarcia.dev/selenium-webdriver-java/data-types.html")
+         )
+
+        valid_data = {
+            "first-name": "Ivan",
+            "last-name": "Ivanov",
+            "address": "Lenina 1",
+            "e-mail": "ivan@example.com",
+            "phone": "+79990001122",
+            "city": "Moscow",
+            "country": "Russia",
+            "job-position": "QA Engineer",
+            "company": "Company"
+        }
+
+        # Подсветка зелёным для валидных полей
+        for name, value in valid_data.items():
+            field = wait.until(EC.presence_of_element_located((By.NAME, name)))
+            field.clear()
+            field.send_keys(value)
+            driver.execute_script(f"""
+                var field = document.getElementsByName('{name}')[0];
+                field.style.border = '2px solid green';
+                setTimeout(function() {{ field.style.border = ''; }}, 5000);
+            """)
+
+        # Подсветка красным для zip
+        zip_field = (wait.until
+                     (EC.presence_of_element_located((By.NAME, "zip-code")))
+                     )
+        zip_field.clear()
+        zip_field.send_keys("abc")
+        driver.execute_script("""
+            var field = arguments[0];
+            field.style.border = '2px solid red';
+            setTimeout(function() { field.style.border = ''; }, 5000);
+        """, zip_field)
+
+        # Жмём Validate
+        submit_btn = wait.until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "button[type='submit']"))
         )
+        submit_btn.click()
 
-        # Ждем, пока DOM загрузится
-        wait = WebDriverWait(driver, 10)
-        (wait.until
-         (EC.presence_of_element_located((By.TAG_NAME, "body")))
-         )
+        # Автоматическое закрытие через 6 секунд
+        threading.Timer(6, lambda: driver.quit()).start()
 
-        # Заполняем поля формы
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "first-name"))).send_keys("Иван")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "last-name"))).send_keys("Иванов")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "address"))).send_keys("ул. Ленина, 1")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "zip-code"))).send_keys("123456")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "city"))).send_keys("Москва")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "country"))).send_keys("Россия")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "e-mail"))).send_keys("ivan@example.com")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "phone"))).send_keys("+79990001122")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "job-position"))).send_keys("Тестировщик")
-         )
-        (wait.until
-         (EC.presence_of_element_located(
-             (By.NAME, "company"))).send_keys("Компания")
-         )
-
-        # Ждем 15 секунд, чтобы увидеть заполненную страницу
-        time.sleep(15)
-
-    finally:
-        driver.quit()  # закрываем браузер после паузы
+    except Exception as e:
+        driver.quit()
+        raise e
