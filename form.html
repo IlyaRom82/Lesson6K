@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Форма с подсветкой</title>
+    <style>
+        input {
+            border: 2px solid #ccc;
+            padding: 5px;
+            margin: 5px 0;
+            width: 200px;
+        }
+        .valid {
+            border-color: green !important;
+        }
+        .invalid {
+            border-color: red !important;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Тестовая форма</h2>
+    <form id="test-form">
+        <input type="text" name="first-name" placeholder="Имя"><br>
+        <input type="text" name="last-name" placeholder="Фамилия"><br>
+        <input type="text" name="zip-code" placeholder="ZIP"><br>
+        <button type="submit">Validate</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('test-form');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // не отправляем форму
+            const firstName = form.elements['first-name'];
+            const lastName = form.elements['last-name'];
+            const zip = form.elements['zip-code'];
+
+            // Простая проверка
+            firstName.className = firstName.value.trim() ? 'valid' : 'invalid';
+            lastName.className = lastName.value.trim() ? 'valid' : 'invalid';
+            zip.className = /^\d+$/.test(zip.value) ? 'valid' : 'invalid';
+        });
+    </script>
+</body>
+</html>

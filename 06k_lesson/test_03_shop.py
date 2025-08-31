@@ -1,3 +1,4 @@
+# PR placeholder: ничего не меняем, просто для отображения измененийgit add .
 import pytest
 import time
 from selenium import webdriver

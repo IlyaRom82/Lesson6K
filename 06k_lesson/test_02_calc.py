@@ -1,3 +1,4 @@
+# PR placeholder: ничего не меняем, просто для отображения изменений2
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
