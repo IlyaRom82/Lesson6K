@@ -1,4 +1,3 @@
-import threading
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -6,61 +5,41 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-@pytest.mark.edge
-def test_form_highlight_edge():
-    driver = webdriver.Edge()  # Убедитесь, что msedgedriver в PATH
-    wait = WebDriverWait(driver, 10)
+def test_form_submission():
+    browser = webdriver.Chrome()
+    browser.get("https://bonigarcia.dev/selenium-webdriver-java/data-types.html")
 
-    try:
-        (driver.get
-         ("https://bonigarcia.dev/selenium-webdriver-java/data-types.html")
-         )
+    browser.find_element(By.NAME, "first-name").send_keys("Иван")
+    browser.find_element(By.NAME, "last-name").send_keys("Петров")
+    browser.find_element(By.NAME, "address").send_keys("Ленина, 55-3")
+    browser.find_element(By.NAME, "e-mail").send_keys("test@skypro.com")
+    browser.find_element(By.NAME, "phone").send_keys("+7985899998787")
+    browser.find_element(By.NAME, "city").send_keys("Москва")
+    browser.find_element(By.NAME, "country").send_keys("Россия")
+    browser.find_element(By.NAME, "job-position").send_keys("QA")
+    browser.find_element(By.NAME, "company").send_keys("SkyPro")
 
-        valid_data = {
-            "first-name": "Ivan",
-            "last-name": "Ivanov",
-            "address": "Lenina 1",
-            "e-mail": "ivan@example.com",
-            "phone": "+79990001122",
-            "city": "Moscow",
-            "country": "Russia",
-            "job-position": "QA Engineer",
-            "company": "Company"
-        }
+    browser.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        # Подсветка зелёным для валидных полей
-        for name, value in valid_data.items():
-            field = wait.until(EC.presence_of_element_located((By.NAME, name)))
-            field.clear()
-            field.send_keys(value)
-            driver.execute_script(f"""
-                var field = document.getElementsByName('{name}')[0];
-                field.style.border = '2px solid green';
-                setTimeout(function() {{ field.style.border = ''; }}, 5000);
-            """)
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.ID, "first-name"))
+    )
 
-        # Подсветка красным для zip
-        zip_field = (wait.until
-                     (EC.presence_of_element_located((By.NAME, "zip-code")))
-                     )
-        zip_field.clear()
-        zip_field.send_keys("abc")
-        driver.execute_script("""
-            var field = arguments[0];
-            field.style.border = '2px solid red';
-            setTimeout(function() { field.style.border = ''; }, 5000);
-        """, zip_field)
+    # проверка, что zip-code подсвечен красным
+    zip_code_field = browser.find_element(By.ID, "zip-code")
+    assert "alert-danger" in zip_code_field.get_attribute("class"), (
+        "Поле Zip code не подсвечено красным"
+    )
 
-        # Жмём Validate
-        submit_btn = wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button[type='submit']"))
+    # проверка, что остальные поля подсвечены зелёным
+    fields_to_check = [
+        "first-name", "last-name", "address", "e-mail", "phone",
+        "city", "country", "job-position", "company"
+    ]
+
+    for field_id in fields_to_check:
+        field = browser.find_element(By.ID, field_id)
+        assert "alert-success" in field.get_attribute("class"), (
+            f"Поле {field_id} не подсвечено зеленым"
         )
-        submit_btn.click()
-
-        # Автоматическое закрытие через 6 секунд
-        threading.Timer(6, lambda: driver.quit()).start()
-
-    except Exception as e:
-        driver.quit()
-        raise e
+    browser.quit()
